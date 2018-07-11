@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+        <div class='login'>
+            <div class='loginName'>
+               <header>
+                  <h2>Five-in-Line Board Game</h2>
+              </header>
+             <form action="/login" method="post">
+              <table>
+                <tr>
+                  <td><b>Username：</b></td>
+                  <td><input type="text" id="username" name="username" placeholder="username"></td>
+                </tr>
+                <tr>
+                  <td><b>Password: </b></td>
+                  <td><input type="password" id="password" name="password" placeholder="password"></td>
+                </tr>
+                <tr>
+                  <td><i><a href="index.html">Reset Password</a></i></td>
+                  <td>&nbsp&nbsp&nbsp<input type="submit" value="Sign In" id="loginbtn">&nbsp&nbsp&nbsp<input type="button" value="Sign Up" onclick="SignUp"></td>
+                </tr>
+              </table>
+             </form>
+            </div>
+        </div>
+        <script src="../routes/login.js"></script>
+        <script src="../routes/login_process.js"></script>
+  </body>
+</html>
