@@ -20,3 +20,6 @@ Overall Improvements:
 Project Log:
     2018-7-10: Connect to the database in app.js
     2018-7-11: Successfully Login with account stored in mongodb
+    2018-7-12: Completed registration page and involve session in the app.js file to store username
+    2018-7-13: Completed password reset page
+    2018-7-14: Working on the index page to display username retrieved from session
