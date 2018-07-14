@@ -1,24 +1,24 @@
 var wrap = document.getElementById('wrap');
 var login = document.getElementsByClassName('login')[0];
-var value = login.getElementsByTagName('input')[0];
+var value = document.getElementById('start'); // get start button
+var storage = document.getElementById('store');
 var socket;
-value.focus();
-value.onkeydown = function (e) {
-    e = e || event;
-    if (e.keyCode === 13 && this.value) {
+
+function render(props) {
+    if (storage.value) {
         login.style.display = 'none';
         wrap.style.display = 'block';
         socket = io();
-        socket.emit('login', { 'userName': this.value });
+        socket.emit('gaming', { 'userName': storage.value });
         ReactDOM.render(React.createElement(Board, null), document.getElementById('wrap'));
     }
-};
+}
 //刷新按钮
 function Reset(props) {
     return React.createElement(
         'button',
         { onClick: () => props.onClick(), className: 'reset' },
-        '\u91CD\u65B0\u5F00\u5C40'
+        'Restart'
     );
 }
 function Unit(props) {
@@ -43,8 +43,9 @@ function OnlinePlayer(props) {
                     React.createElement(
                         'div',
                         { className: 'fl' },
-                        value.userName
-                    )
+                        storage.value
+                    ),
+                    ' //'
                 );
             } else if (value.hasOwnProperty('role') && !value.role) {
                 return React.createElement(
@@ -54,16 +55,17 @@ function OnlinePlayer(props) {
                     React.createElement(
                         'div',
                         { className: 'fl' },
-                        value.userName
-                    )
+                        storage.value
+                    ),
+                    ' //'
                 );
             } else {
                 return React.createElement(
                     'p',
                     { key: index },
-                    value.userName,
+                    storage.value,
                     ' \uFF1A\u5728\u89C2\u6218'
-                );
+                ); //
             }
         })
     );

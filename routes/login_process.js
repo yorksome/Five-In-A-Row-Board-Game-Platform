@@ -5,51 +5,29 @@ var router = express.Router();
 var UserModel = require('../database/userModel');
 //var UserEntity = require('../database/userEntity');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
+var session = require('express-session');
 
-router.post('/login', urlencodedParser, function (req, res) {
+router.post('/loginProcess',urlencodedParser, function (req, res) {
 
   var input_username = req.body.username;
   var input_password = req.body.password;
-
   UserModel.findOne({username:input_username,password:input_password},function(error,result){
        if (result==null) {
          console.log('false');
-         res.sendFile(path.join(__dirname, '../public', 'login.html'));
+         //req.session.user = null;
+         res.redirect('/');
+         //return res.json({success: false, message: 'Fail to login'});
        }
        else {
         console.log('true');
+        req.session.user = input_username;
+        console.log(req.session.user);
+      //  res.json({success:true, message:'Login Successfully'});
         res.sendFile(path.join(__dirname, '../public', 'index.html'));
        }
-
   })
-  //function getUser() {
-//    var user;
-  //  user = UserModel.findOne({ USERNAME: input_username })
-//    .exec()
-//    .then(function (result) {
-//      return result;
-//    })
-//    .error(function (error) {
-//      return 'Promise Error:' + error;
-//    })
-//    return user;
-//  }
 
-//  getUser()
-//    .then(function(result){
-//      if(result === null) {
-//        res.redirect('/');
-//      } else if (input_username === result.USERNAME && input_password === result.PASSWORD) {
-//        console.log('true');
-//        res.redirect('/index');
-//      } else {
-//        console.log('false');
-//        res.redirect('/');
-//      }
-//    })
-//    .error(function(error){
-//      return 'Promise Error:' + error;
-//    })
 });
+
 
 module.exports = router;

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>谁才是真正的五子棋大师</title> 
+    <title>Five-in-line Master</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
@@ -10,9 +10,21 @@
         <div class='login'>
             <div class='loginName'>
                <header>
-                  <h2>谁才是真正的五子连珠大师</h2>
+                  <h2>Five-in-line Master</h2>
+                  <h3 id='user'>User:</h3>
               </header>
-               <h2>英雄请留下大名：<input type="text"></h2>               
+               <table>
+                 <tr>
+                   <td><input type="button" id="profile" value="Your Profile"></td>
+                 </tr>
+                 <tr>
+                   <td><input type="button" id="history" value="Match History"></td>
+                </tr>
+                <tr>
+                  <td><input type="button" id="start" value="Start Game" onclick="render()">
+                      <input type="hidden" id="store" value="test">
+                  </td>
+                </tr>
             </div>
         </div>
     <script src="js/react.js"></script>

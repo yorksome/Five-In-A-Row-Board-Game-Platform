@@ -1,24 +1,24 @@
 var wrap=document.getElementById('wrap');
 var login=document.getElementsByClassName('login')[0];
-var value=login.getElementsByTagName('input')[0];
+var value = document.getElementById('start'); // get start button
+var storage = document.getElementById('store');
 var socket;
-value.focus();
-value.onkeydown = function(e){
-e = e || event;
-if (e.keyCode === 13 && this.value) {
+
+function render(props){
+  if(storage.value){
     login.style.display='none';
     wrap.style.display='block';
     socket=io();
-    socket.emit('login',{'userName':this.value});
+    socket.emit('gaming',{'userName':storage.value});
     ReactDOM.render(<Board />,
     document.getElementById('wrap'))
-}
+  }
 }
 //刷新按钮
 function Reset(props){
    return(
       <button onClick={() => props.onClick()} className='reset'>
-         重新开局
+         Restart
       </button>
    )
 }
@@ -34,23 +34,23 @@ function OnlinePlayer(props){
      arr.push(props.online[key]);
   }
    return(
-         <div className='online'> 
+         <div className='online'>
               {arr.map(function(value,index){
-                  
+
                     if(value.hasOwnProperty('role') && value.role){
                          return <div key={index} className='clearfix'>
-                                    
+
                                     <Unit style='unit unit-b' />
-                                    <div className='fl'>{value.userName}</div>
+                                    <div className='fl'>{storage.value}</div>
                                 </div>
                     }else if(value.hasOwnProperty('role') && !value.role){
                          return  <div key={index} className='clearfix'>
-                                    
+
                                     <Unit style='unit unit-w' />
-                                    <div className='fl'>{value.userName}</div>
+                                    <div className='fl'>{storage.value}</div>
                                 </div>
                     }else{
-                         return  <p key={index}>{value.userName} ：在观战</p>
+                         return  <p key={index}>{storage.value} ：在观战</p> 
                     }
               })
            }
@@ -138,7 +138,7 @@ class Board extends React.Component{
       }
       if(num<2){
         alert('请等待partner')
-        return 
+        return
       }
       //判断该谁落子
       if(this.state.isBlacksTurn==this.state.urBlack){
@@ -150,10 +150,10 @@ class Board extends React.Component{
       }else{
           alert('不该你走呢亲')
       }
-      
+
   }
   reset(){
-     socket.emit('reset',{"turn":this.state.isBlacksTurn})  
+     socket.emit('reset',{"turn":this.state.isBlacksTurn})
   }
   componentDidUpdate(){
   // 更新的时候触发
@@ -165,7 +165,7 @@ class Board extends React.Component{
                    ReactDOM.render(<img src='img/defeat.png' className='victory' />,
                     document.getElementById('gameover'));
             }
-           
+
 
       }
   }
@@ -184,7 +184,7 @@ class Board extends React.Component{
           <Turn turn={this.state.isBlacksTurn}/>
           <Reset onClick={() => this.reset()} />
           <div id='gameover'></div>
-        </div>              
+        </div>
       )
     }
 }
@@ -192,7 +192,7 @@ class Board extends React.Component{
 function calculateWinner(arr,num) {
     var target=arr[num];
     var line=1;
-    var upSide,leftUp,rightUp;    
+    var upSide,leftUp,rightUp;
     upSide=leftUp=rightUp=Math.min(Math.floor(num/15),5);
     //横向判断先向左后向右
     var leftSide=Math.min(num%15,5);
@@ -239,7 +239,7 @@ function calculateWinner(arr,num) {
         line=1;
     }
     //   斜向判断  酱紫/斜   先上后下
-    
+
     rightUp=Math.min(rightUp,rightSide)//判断太靠右边了，就被右边界隔断
     for(let i=num-14;i>=num-rightUp*14;i=i-14){
         if(arr[i]==target){
@@ -270,7 +270,7 @@ function calculateWinner(arr,num) {
             line++;
         }else{
             break;
-        }    
+        }
     }
     rightDown=Math.min(rightDown,rightSide)
     for(let i=num+16;i<=num+rightDown*16;i=i+16){

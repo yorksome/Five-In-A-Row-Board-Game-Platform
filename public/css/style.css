@@ -11,6 +11,7 @@ html,body{
   }
   table{
 	  margin:auto;
+    text-align: center;
   }
   table td{
 	  height:40px;
@@ -37,7 +38,7 @@ html,body{
   }
   .unit{
       float:left;
-      width:35px;height:35px;           
+      width:35px;height:35px;
   }
   .unit-b{
       background: url('../img/black.png') no-repeat center center;

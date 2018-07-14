@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master Reset Password</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+        <div class='login'>
+            <div class='loginName'>
+               <header>
+                  <h2>Reset Password</h2>
+              </header>
+             <form action="/reset" method="post">
+              <table>
+                <tr>
+                  <td><b>Username：</b></td>
+                  <td><input type="text"  name="re_username" placeholder="username"></td>
+                </tr>
+                <tr>
+                  <td><b>Old Password: </b></td>
+                  <td><input type="password" name="old_password" placeholder="old password"></td>
+                </tr>
+                <tr>
+                  <td><b>New Password: </b></td>
+                  <td><input type="password" name="new_password" placeholder="new password"></td>
+                </tr>
+                <tr>
+                  <td><i><a href="login.html">Back to Signin</a></i></td>
+                  <td><input type="submit" value="Confirm"></td>
+                </tr>
+              </table>
+             </form>
+            </div>
+        </div>
+        <script src="../routes/reset.js"></script>
+  </body>
+</html>
