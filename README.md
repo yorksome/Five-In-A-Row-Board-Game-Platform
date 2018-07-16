@@ -23,3 +23,12 @@ Project Log:
     2018-7-12: Completed registration page and involve session in the app.js file to store username
     2018-7-13: Completed password reset page
     2018-7-14: Working on the index page to display username retrieved from session
+    2018-7-16: Utilize ejs template in 'views' folder to render pages. Successfully present username on the webpage which is sent from the backend.
+    
+    
+Instructions:
+1. Install Mongo Database first.
+2. To start：· npm install
+             · node app
+3. Open webbrowser and enter: IP:3000 (Example:10.217.133.21:3000)
+4. Start Play！
