@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+  </head>
+  <body>
+        <div class='login'>
+            <div class='loginName'>
+               <header>
+                  <h2>Five-in-Line Board Game</h2>
+              </header>
+             <form action="/loginProcess" method="post" id="loginForm" onsubmit="return validate();">
+              <table>
+                <tr>
+                  <td><b>Username：</b></td>
+                  <td><input type="text" id="username" name="username" placeholder="username"></td>
+                </tr>
+                <tr>
+                  <td><b>Password: </b></td>
+                  <td><input type="password" id="password" name="password" placeholder="password"></td>
+                </tr>
+                <tr>
+                  <td><i><a href="/reset">Reset Password</a></i></td>
+                  <td><input type="submit" value="Sign In" id="loginbtn">&nbsp&nbsp&nbsp<input type="button" value="Sign Up" onclick="window.location='/register'"></td>
+                </tr>
+              </table>
+             </form>
+            </div>
+        </div>
+        <script>
+                  function validate(){
+
+                          username = document.querySelector('input[name=username]'),
+                          password = document.querySelector('input[name=password]');
+
+                          if(username.value == "" || password.value == "" ){
+                              alert('Username or Password can not be left blank.');
+                              return false;
+                          }
+
+                          return true;
+                      }
+            </script>
+  </body>
+</html>

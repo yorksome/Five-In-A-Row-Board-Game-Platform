@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master Registration</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+        <div class='login'>
+            <div class='loginName'>
+               <header>
+                  <h2>Create New Account</h2>
+              </header>
+             <form action="/registerProcess" method="post" id="regForm" onsubmit="return validate();">
+              <table>
+                <tr>
+                  <td><b>Username：</b></td>
+                  <td><input type="text"  name="reg_username" placeholder="username"></td>
+                </tr>
+                <tr>
+                  <td><b>Password: </b></td>
+                  <td><input type="password" name="reg_password" placeholder="password"></td>
+                </tr>
+                <tr>
+                  <td><b>Confirm Password: </b></td>
+                  <td><input type="password" name="re_password" ></td>
+                </tr>
+                <tr>
+                  <td><i><a href="/">Back to Signin</a></i></td>
+                  <td><input type="submit" value="Sign Up"></td>
+                </tr>
+              </table>
+             </form>
+            </div>
+        </div>
+        <script>
+            //Validate Form
+            function validate(){
+
+                    username = document.querySelector('input[name=reg_username]'),
+                    password = document.querySelector('input[name=reg_password]'),
+                    repassword = document.querySelector('input[name=re_password]');
+
+                    if(username.value == "" || password.value == "" ){
+                        alert('Username or Password can not be left blank.');
+                        return false;
+                    }
+
+                    if(repassword.value !== password.value){
+                      if(repassword.value ==""){
+                        alert('Please confirm your password.');
+                        return false;
+                      }else {
+                        alert('Two passwords do not match.');
+                        return false;
+                      }
+                    }
+                    return true;
+                }
+
+            </script>
+  </body>
+</html>

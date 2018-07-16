@@ -4,6 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 //var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var session = require('express-session');
 
 var mongoose = require('./config/mongoose.js');
@@ -11,42 +12,52 @@ var db = mongoose();
 
 var loginRouter = require('./routes/login');
 var loginProcessRouter = require('./routes/login_process');
-//var indexRouter = require('./routes/index');
+var indexRouter = require('./routes/index');
 var regRouter = require('./routes/register');
-var resetRouter = require('./routes/reset');
-//app.set('views','views');
-//app.set('view engine', 'html');
-app.use(cookieParser('userStorage'));
+var resRouter = require('./routes/reset');
+var regProcessRouter = require('./routes/register_process');
+var resetProcessRouter = require('./routes/reset_process');
+var logoutRouter = require('./routes/logout');
+
+app.set('views','views');
+app.set('view engine','ejs'); //utilize ejs template
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:false}));
+app.use(cookieParser());
+app.use(express.static('public')); // provide static files such as images
+
 app.use(session({
   resave:true,
   saveUninitialized:false,
   secret:'userStorage',
-  name:'loginAcc',
   cookie:{
-    maxAge:-1
+    maxAge:15*60*1000,
+    secure:false
   }
 }));
 
-//app.use(bodyParser.json()); // for parsing application/json
-//app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/',loginRouter); //render login page
-//app.use('/index',indexRouter);
+app.use('/index',indexRouter); // render index page
+app.use('/register',regRouter);
+app.use('/reset',resRouter);
+app.use('/logout',logoutRouter);
+
 app.post('/loginProcess',loginProcessRouter); // login post process
-app.post('/register',regRouter); // register post process
-app.post('/reset',resetRouter);
-app.use(express.static('public')); // provide static files such as images
+app.post('/registerProcess',regProcessRouter); // register post process
+app.post('/resetProcess',resetProcessRouter);
+
 app.use(function(req, res, next) {
   res.locals.session = req.session; // global variable that might change
   if (!req.session.user) {
     if (req.url == "/") {
-      next(); //如果请求的地址是登录则通过，进行下一个请求
+      next();
     } else {
-      res.redirect('/');//跳转到登录页面
+      res.redirect('/');
     }
   } else if (req.session.user) {
     var id = req.session.user;
     res.redirect('/loginProcess');
-    next();//如果已经登录，则可以进入
+    next();
   }
 });
 
@@ -68,8 +79,8 @@ io.on('connection', function(socket){
 
     io.to(socket.id).emit('role', onlineUser[socket.id]);//将身份信息（下黑旗还是白旗）传过去
     io.emit('online', onlineUser);//将在线人员名单带过去
-    console.log(obj.userName,'is loginning');
-    console.log('在线用户',onlineUser,'在线人数',userNum);
+    console.log(obj.userName,'is starting a match');
+    console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
   })
   socket.on('disconnect', function(){
     console.log(socket.id,'disconnected');
@@ -78,16 +89,16 @@ io.on('connection', function(socket){
       userNum--;
     }
     io.emit('online',onlineUser);//用来同步数据在线人数
-    console.log('在线用户',onlineUser,'在线人数',userNum);
+    console.log('Online Users: ',onlineUser,'Online Numbers: ',userNum);
   });
   socket.on('chat message', function(msg){
     // 参数为下到什么坐标和目前是黑方or白方
-    console.log(msg.player?'黑方':'白方','落子在: ' + msg.place);
+    console.log(msg.player?'Black':'White','placed at: ' + msg.place);
     io.emit('chat message', msg);
   });
   socket.on('reset', function(msg){
     //参数为目前黑旗or白旗
-    console.log('清除重来');
+    console.log('Restart');
     io.emit('reset',msg);
   });
 });

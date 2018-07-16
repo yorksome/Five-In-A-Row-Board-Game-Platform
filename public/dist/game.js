@@ -44,8 +44,7 @@ function OnlinePlayer(props) {
                         'div',
                         { className: 'fl' },
                         storage.value
-                    ),
-                    ' //'
+                    )
                 );
             } else if (value.hasOwnProperty('role') && !value.role) {
                 return React.createElement(
@@ -56,8 +55,7 @@ function OnlinePlayer(props) {
                         'div',
                         { className: 'fl' },
                         storage.value
-                    ),
-                    ' //'
+                    )
                 );
             } else {
                 return React.createElement(
@@ -65,7 +63,7 @@ function OnlinePlayer(props) {
                     { key: index },
                     storage.value,
                     ' \uFF1A\u5728\u89C2\u6218'
-                ); //
+                );
             }
         })
     );
