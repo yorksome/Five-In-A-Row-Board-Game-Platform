@@ -10,6 +10,7 @@ This web-based platform is created based on a preexisting website of which the s
 Acknowledgement:https://github.com/guguji5/five-in-line
 
 Overall Improvements:
+
     1. Add components: user login, user registration, password recovery
     2. Check personal profile
     3. Check match history (Gained rank points, reputation credits)
@@ -18,17 +19,29 @@ Overall Improvements:
     6. After game: automatic rank calculation, automatic reputation credits calculation              
 
 Project Log:
+
     2018-7-10: Connect to the database in app.js
     2018-7-11: Successfully Login with account stored in mongodb
     2018-7-12: Completed registration page and involve session in the app.js file to store username
     2018-7-13: Completed password reset page
     2018-7-14: Working on the index page to display username retrieved from session
     2018-7-16: Utilize ejs template in 'views' folder to render pages. Successfully present username on the webpage which is sent from the backend.
-    
+    2018-7-17 ~ 2018-7-27: Successfully completed functionalities of user management area. Now players can check their profile and match history. Also, they are able to see their opponent's rank and reputation points once they started the game. Match Results would be saved to DB and players' rank and reputation would be upated as well after each match.
+
+Difficulties:
+
+    1. Form - router post (Cannot Post) -- set app.post(path,routerObject) in app.js
+    2. Mongoose - Create/Update -- set Schema -> Model (used to interact with DB)
+    3. Authentication - User Login -- utilize session to save user login status in server side
+    4. ejs engine - display username -- display session username on the frontend webpages by using ejs template, set view engine    in app.js first and render ejs when needed.
+    5. React ComponentDidUpdate -- This component used to update UI would be triggered once the state is altered. Hence it is readily to produce a dead loop if programmers use 'this.setState' in this component area without strict conditions.
+    6. How to automatically submit the result to database instead of players' manaully clicking on the button?
+    7. How to distinguish the situation whether people close the tab before match starting or in match gaming?
     
 Instructions:
-1. Install Mongo Database first.
-2. To start：· npm install
-             · node app
-3. Open webbrowser and enter: IP:3000 (Example:10.217.133.21:3000)
-4. Start Play！
+
+    1. Install Mongo Database first.
+    2. To start：· npm install
+                 · node app
+    3. Open webbrowser and enter: IP:3000 (Example:10.217.133.21:3000)
+    4. Start Play！
