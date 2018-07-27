@@ -13,9 +13,16 @@ html,body{
 	  margin:auto;
     text-align: center;
   }
+
+  table th{
+    height: 40px;
+
+  }
+
   table td{
 	  height:40px;
   }
+
   header h2{
     text-align: center;
     padding:20px;
@@ -36,6 +43,11 @@ html,body{
     padding:5px;
     background: url('../img/timg.jpg');
   }
+  .player{
+    position: absolute;
+    left: 50px;
+  }
+
   .unit{
       float:left;
       width:35px;height:35px;
@@ -50,7 +62,7 @@ html,body{
   }
   .reset{
       position:fixed;
-      left:40px;
+      left:33%;
       bottom:40px;
       padding: 10px 15px;
       border: 1px solid;
@@ -58,6 +70,38 @@ html,body{
       background-image: -webkit-gradient(linear, 0 0, right bottom, from(rgba(0, 250, 0, 1)), to(rgba(51, 51, 51, 1)));
       z-index:10;
   }
+  .pull{
+      position:fixed;
+      left:43%;
+      bottom:40px;
+      padding: 10px 15px;
+      border: 1px solid;
+      border-radius: 27px;
+      background-image: -webkit-gradient(linear, 0 0, right bottom, from(rgba(0, 250, 0, 1)), to(rgba(51, 51, 51, 1)));
+      z-index:10;
+  }
+
+  .give{
+      position:fixed;
+      left:53%;
+      bottom:40px;
+      padding: 10px 15px;
+      border: 1px solid;
+      border-radius: 27px;
+      background-image: -webkit-gradient(linear, 0 0, right bottom, from(rgba(0, 250, 0, 1)), to(rgba(51, 51, 51, 1)));
+      z-index:10;
+  }
+  .draw{
+      position:fixed;
+      left:63%;
+      bottom:40px;
+      padding: 10px 15px;
+      border: 1px solid;
+      border-radius: 27px;
+      background-image: -webkit-gradient(linear, 0 0, right bottom, from(rgba(0, 250, 0, 1)), to(rgba(51, 51, 51, 1)));
+      z-index:10;
+  }
+
   .turn{
       position:fixed;
       right:9px;
@@ -82,6 +126,27 @@ html,body{
   .loginName > h2{
     margin-left:40px;
   }
+
+  .profile{
+    display: relative;
+    width: 100%;
+    height:calc(100%);
+    background: url('../img/');
+    background-size: cover;
+  }
+  .profile .details{
+    position:absolute;
+    width:500px;
+    top:12%;
+    height:350px;
+    left:50%;
+    margin-left:-250px;
+    background: rgba(255,255,255,0.4)
+  }
+  .details > h2{
+    margin-left:40px;
+  }
+
   .online{
     position:fixed;
       left:9px;

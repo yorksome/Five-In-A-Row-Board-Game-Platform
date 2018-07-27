@@ -1,9 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var path = require('path');
 var router = express.Router();
 var UserModel = require('../database/userModel');
-//var UserEntity = require('../database/userEntity');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 var session = require('express-session');
 

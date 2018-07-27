@@ -1,20 +1,24 @@
 var wrap=document.getElementById('wrap');
 var login=document.getElementsByClassName('login')[0];
-var value = document.getElementById('start'); // get start button
-var storage = document.getElementById('store');
+var real = document.getElementById('user');
+var rank = document.getElementById('rank');
+var credit = document.getElementById('credit');
 var socket;
 
-function render(props){
-  if(storage.value){
+function renderBoard(props){
+  if(credit.value>=0){
     login.style.display='none';
     wrap.style.display='block';
     socket=io();
-    socket.emit('gaming',{'userName':storage.value});
+    socket.emit('login',{'userName':real.value,'rank':rank.value,'credit':credit.value});
     ReactDOM.render(<Board />,
     document.getElementById('wrap'))
   }
+  else{
+    alert('Low reputation credits. Game Blocked.');
+  }
 }
-//刷新按钮
+//Restart Button
 function Reset(props){
    return(
       <button onClick={() => props.onClick()} className='reset'>
@@ -22,12 +26,40 @@ function Reset(props){
       </button>
    )
 }
+
+//Pull Back
+function Pull(props){
+   return(
+      <button onClick={() => props.onClick()} className='pull'>
+         Pull Back
+      </button>
+   )
+}
+
+//Give up match
+function Give(props){
+   return(
+      <button onClick={() => props.onClick()} className='give'>
+         Give Up
+      </button>
+   )
+}
+
+// Draw offer
+function Draw(props){
+   return(
+      <button onClick={() => props.onClick()} className='draw'>
+         Offer Draw
+      </button>
+   )
+}
+
 function Unit(props){
    return(
       <div className={props.style} onClick={() => props.onClick()}></div>
    )
 }
-//在线人数
+//Online Player Numbers
 function OnlinePlayer(props){
   let arr=[];
   for(let key in props.online){
@@ -41,16 +73,16 @@ function OnlinePlayer(props){
                          return <div key={index} className='clearfix'>
 
                                     <Unit style='unit unit-b' />
-                                    <div className='fl'>{storage.value}</div>
+                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}]</div>
                                 </div>
                     }else if(value.hasOwnProperty('role') && !value.role){
                          return  <div key={index} className='clearfix'>
 
                                     <Unit style='unit unit-w' />
-                                    <div className='fl'>{storage.value}</div>
+                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}]</div>
                                 </div>
                     }else{
-                         return  <p key={index}>{storage.value} ：在观战</p> 
+                         return  <p key={index}>{value.userName} : is observing.</p>
                     }
               })
            }
@@ -78,7 +110,9 @@ class Board extends React.Component{
       isBlacksTurn:true,
       point:-1,
       urBlack:null,
-      online:{}
+      status:0,
+      online:{},
+      gaming:{}
     };
   }
   componentWillMount() {
@@ -86,17 +120,20 @@ class Board extends React.Component{
     socket.on('role', function(msg){
         if(msg.hasOwnProperty('role') && msg.role){
              that.setState({urBlack: true,})
-             console.log('你是黑旗')
+             console.log('You are Black.')
         }else if(msg.hasOwnProperty('role') && !msg.role){
             that.setState({urBlack: false,})
-            console.log('你是bai旗')
+            console.log('You are white.')
         }else{
-             console.log('人满了，不好意思')
+             console.log('Chess Board Busy.')
         }
     })
      socket.on('online', function(user){
-         that.setState({online: user,});
+         that.setState({online: user});
     })
+     socket.on('gaming',function(user){
+       that.setState({gaming: user});
+     })
   }
   componentDidMount() {
     var that = this;
@@ -120,12 +157,13 @@ class Board extends React.Component{
            });
         ReactDOM.render(<div></div>,document.getElementById('gameover'));
         if(msg.turn){
-          alert("it's black's turn")
+          alert("Black starts first.")
         }else{
-          alert("it's white's turn")
+          alert("White starts first.")
         }
-    })
+    });
   }
+
   handle(n){
 
       //刚落子的加个css3特效
@@ -137,38 +175,131 @@ class Board extends React.Component{
             num++;
       }
       if(num<2){
-        alert('请等待partner')
+        alert('Waiting for a partner.')
         return
       }
       //判断该谁落子
       if(this.state.isBlacksTurn==this.state.urBlack){
-          if(this.state.styleArr[n]!='unit'){//如果落子的地方有子了，就骂他
-            alert('那有棋子了，你傻叉啊');
+          if(this.state.styleArr[n]!='unit'){//如果落子的地方有子
+            alert('The place is occupied.');
             return;
         }
         socket.emit('chat message',{'place':n,'player':this.state.isBlacksTurn})
       }else{
-          alert('不该你走呢亲')
+          alert('It is not your turn.');
       }
 
   }
   reset(){
      socket.emit('reset',{"turn":this.state.isBlacksTurn})
   }
+
+  pull(){
+    socket.emit('pullback',{})
+  }
+
+  give(){
+    socket.emit('giveup',{})
+  }
+
+  draw(){
+    socket.emit('offerdraw',{})
+  }
+
   componentDidUpdate(){
   // 更新的时候触发
+  var gamingUser = this.state.gaming;
+  var p1 = real.value;
+  var p1Rank = rank.value;
+  var p1Rep = credit.value;
+  var p1,p1Rank,p1Rep,p1Status,p1Win;
+  var p2,p2Rank,p2Rep,p2Status,p2Win;
+
+  for(let key in gamingUser){
+     if(gamingUser[key].userName!=p1)
+     {
+       p2 = gamingUser[key].userName;
+       p2Rank = gamingUser[key].rank;
+       p2Rep = gamingUser[key].credit;
+       p2Status = gamingUser[key].status;
+       p2Win = gamingUser[key].win;
+     }else {
+       p1Status = gamingUser[key].status;
+       p1Win = gamingUser[key].win;
+     }
+  }
        if(calculateWinner(this.state.styleArr,this.state.point)){
             if(this.state.isBlacksTurn!=this.state.urBlack&&this.state.urBlack!=null){
-                   ReactDOM.render(<img src='img/victory.png' className='victory' />,
-                   document.getElementById('gameover'));
+              ReactDOM.render(<img src='img/victory.png' className='victory'/>,document.getElementById('gameover'));
+               socket.emit('victory',{userName:real.value});
+               p1Status = p2Status = 1;
+               p1Win = 'victory'; p2Win = 'defeat';
+               ReactDOM.render(
+               <form action='/result' method='post' onSubmit={this.submit}>
+                <table>
+                 <tbody>
+                 <tr>
+                  <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
+                  <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
+                  <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+                  <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
+                  <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
+                 </tr>
+                 <tr>
+                  <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
+                  <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
+                  <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+                  <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
+                  <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
+                 </tr>
+                 <tr>
+                  <td><input type='submit' value='Quit' /></td>
+                 </tr>
+                 </tbody>
+               </table>
+               </form>,
+               document.getElementById('result'));
             }else{
-                   ReactDOM.render(<img src='img/defeat.png' className='victory' />,
-                    document.getElementById('gameover'));
+              ReactDOM.render(<img src='img/defeat.png' className='victory'/>,document.getElementById('gameover'));
+              socket.emit('defeat',{userName:real.value});
+              p1Status = p2Status = 1;
+              p1Win = 'defeat'; p2Win = 'victory';
+              ReactDOM.render(
+              <form action='/result' method='post' onSubmit={this.submit}>
+               <table>
+                <tbody>
+                <tr>
+                 <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
+                 <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
+                 <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+                 <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
+                 <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
+                </tr>
+                <tr>
+                 <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
+                 <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
+                 <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+                 <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
+                 <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
+                </tr>
+                <tr>
+                 <td><input type='submit' value='Quit' /></td>
+                </tr>
+                </tbody>
+              </table>
+              </form>,
+              document.getElementById('result'));
             }
-
-
       }
   }
+
+  submit(e){
+    console.log('Submit Result');
+    const path='/result';
+    browserHistory.push(path);
+    e.preventDefault();
+  }
+
   render(){
 
       let board=[];
@@ -183,8 +314,12 @@ class Board extends React.Component{
           {board}
           <Turn turn={this.state.isBlacksTurn}/>
           <Reset onClick={() => this.reset()} />
+          <Pull onClick={() => this.pullback()} />
+          <Give onClick={() => this.giveup()} />
+          <Draw onClick={() => this.offerdraw()} />
           <div id='gameover'></div>
-        </div>
+          <div id='result'></div>
+      </div>
       )
     }
 }

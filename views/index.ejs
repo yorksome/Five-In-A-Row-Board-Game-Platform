@@ -16,16 +16,15 @@
                    </header>
                    <table>
                      <tr>
-                       <td><input type="button" id="profile" value="Your Profile"></td>
+                       <td><input type="button" id="profile" value="Your Profile" onclick="window.location='/profile'"></td>
                      </tr>
                      <tr>
-                       <td><input type="button" id="history" value="Match History"></td>
+                       <td><input type="button" id="history" value="Match History" onclick="window.location='/history'"></td>
                     </tr>
                     <tr>
-                      <td><input type="button" id="start" value="Start Game" onclick="render()">
-                        <input type="hidden" id="store" value= <%= user.username %>>
-                      </td>
+                      <td><input type="button" id="start" value="Start Game" onclick="window.location='/gaming'"></td>
                     </tr>
+                  </table>
               <% }else{ %>
                     <header>
                        <h2>Five-in-line Master</h2>
@@ -36,9 +35,5 @@
              <% } %>
             </div>
         </div>
-    <script src="js/react.js"></script>
-    <script src="js/react-dom.js"></script>
-    <script src="../socket.io/socket.io.js"></script>
-    <script src='dist/game.js'></script>
   </body>
 </html>

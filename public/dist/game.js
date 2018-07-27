@@ -1,19 +1,22 @@
 var wrap = document.getElementById('wrap');
 var login = document.getElementsByClassName('login')[0];
-var value = document.getElementById('start'); // get start button
-var storage = document.getElementById('store');
+var real = document.getElementById('user');
+var rank = document.getElementById('rank');
+var credit = document.getElementById('credit');
 var socket;
 
-function render(props) {
-    if (storage.value) {
+function renderBoard(props) {
+    if (credit.value >= 0) {
         login.style.display = 'none';
         wrap.style.display = 'block';
         socket = io();
-        socket.emit('gaming', { 'userName': storage.value });
+        socket.emit('login', { 'userName': real.value, 'rank': rank.value, 'credit': credit.value });
         ReactDOM.render(React.createElement(Board, null), document.getElementById('wrap'));
+    } else {
+        alert('Low reputation credits. Game Blocked.');
     }
 }
-//刷新按钮
+//Restart Button
 function Reset(props) {
     return React.createElement(
         'button',
@@ -21,10 +24,38 @@ function Reset(props) {
         'Restart'
     );
 }
+
+//Pull Back
+function Pull(props) {
+    return React.createElement(
+        'button',
+        { onClick: () => props.onClick(), className: 'pull' },
+        'Pull Back'
+    );
+}
+
+//Give up match
+function Give(props) {
+    return React.createElement(
+        'button',
+        { onClick: () => props.onClick(), className: 'give' },
+        'Give Up'
+    );
+}
+
+// Draw offer
+function Draw(props) {
+    return React.createElement(
+        'button',
+        { onClick: () => props.onClick(), className: 'draw' },
+        'Offer Draw'
+    );
+}
+
 function Unit(props) {
     return React.createElement('div', { className: props.style, onClick: () => props.onClick() });
 }
-//在线人数
+//Online Player Numbers
 function OnlinePlayer(props) {
     let arr = [];
     for (let key in props.online) {
@@ -43,7 +74,12 @@ function OnlinePlayer(props) {
                     React.createElement(
                         'div',
                         { className: 'fl' },
-                        storage.value
+                        value.userName,
+                        '   [Rank: ',
+                        value.rank,
+                        ', Reputation: ',
+                        value.credit,
+                        ']'
                     )
                 );
             } else if (value.hasOwnProperty('role') && !value.role) {
@@ -54,15 +90,20 @@ function OnlinePlayer(props) {
                     React.createElement(
                         'div',
                         { className: 'fl' },
-                        storage.value
+                        value.userName,
+                        '   [Rank: ',
+                        value.rank,
+                        ', Reputation: ',
+                        value.credit,
+                        ']'
                     )
                 );
             } else {
                 return React.createElement(
                     'p',
                     { key: index },
-                    storage.value,
-                    ' \uFF1A\u5728\u89C2\u6218'
+                    value.userName,
+                    ' : is observing.'
                 );
             }
         })
@@ -103,7 +144,9 @@ class Board extends React.Component {
             isBlacksTurn: true,
             point: -1,
             urBlack: null,
-            online: {}
+            status: 0,
+            online: {},
+            gaming: {}
         };
     }
     componentWillMount() {
@@ -111,16 +154,19 @@ class Board extends React.Component {
         socket.on('role', function (msg) {
             if (msg.hasOwnProperty('role') && msg.role) {
                 that.setState({ urBlack: true });
-                console.log('你是黑旗');
+                console.log('You are Black.');
             } else if (msg.hasOwnProperty('role') && !msg.role) {
                 that.setState({ urBlack: false });
-                console.log('你是bai旗');
+                console.log('You are white.');
             } else {
-                console.log('人满了，不好意思');
+                console.log('Chess Board Busy.');
             }
         });
         socket.on('online', function (user) {
             that.setState({ online: user });
+        });
+        socket.on('gaming', function (user) {
+            that.setState({ gaming: user });
         });
     }
     componentDidMount() {
@@ -145,12 +191,13 @@ class Board extends React.Component {
             });
             ReactDOM.render(React.createElement('div', null), document.getElementById('gameover'));
             if (msg.turn) {
-                alert("it's black's turn");
+                alert("Black starts first.");
             } else {
-                alert("it's white's turn");
+                alert("White starts first.");
             }
         });
     }
+
     handle(n) {
 
         //刚落子的加个css3特效
@@ -162,34 +209,238 @@ class Board extends React.Component {
             num++;
         }
         if (num < 2) {
-            alert('请等待partner');
+            alert('Waiting for a partner.');
             return;
         }
         //判断该谁落子
         if (this.state.isBlacksTurn == this.state.urBlack) {
             if (this.state.styleArr[n] != 'unit') {
-                //如果落子的地方有子了，就骂他
-                alert('那有棋子了，你傻叉啊');
+                //如果落子的地方有子
+                alert('The place is occupied.');
                 return;
             }
             socket.emit('chat message', { 'place': n, 'player': this.state.isBlacksTurn });
         } else {
-            alert('不该你走呢亲');
+            alert('It is not your turn.');
         }
     }
     reset() {
         socket.emit('reset', { "turn": this.state.isBlacksTurn });
     }
+
+    pull() {
+        socket.emit('pullback', {});
+    }
+
+    give() {
+        socket.emit('giveup', {});
+    }
+
+    draw() {
+        socket.emit('offerdraw', {});
+    }
+
     componentDidUpdate() {
         // 更新的时候触发
+        var gamingUser = this.state.gaming;
+        var p1 = real.value;
+        var p1Rank = rank.value;
+        var p1Rep = credit.value;
+        var p1, p1Rank, p1Rep, p1Status, p1Win;
+        var p2, p2Rank, p2Rep, p2Status, p2Win;
+
+        for (let key in gamingUser) {
+            if (gamingUser[key].userName != p1) {
+                p2 = gamingUser[key].userName;
+                p2Rank = gamingUser[key].rank;
+                p2Rep = gamingUser[key].credit;
+                p2Status = gamingUser[key].status;
+                p2Win = gamingUser[key].win;
+            } else {
+                p1Status = gamingUser[key].status;
+                p1Win = gamingUser[key].win;
+            }
+        }
         if (calculateWinner(this.state.styleArr, this.state.point)) {
             if (this.state.isBlacksTurn != this.state.urBlack && this.state.urBlack != null) {
                 ReactDOM.render(React.createElement('img', { src: 'img/victory.png', className: 'victory' }), document.getElementById('gameover'));
+                socket.emit('victory', { userName: real.value });
+                p1Status = p2Status = 1;
+                p1Win = 'victory';p2Win = 'defeat';
+                ReactDOM.render(React.createElement(
+                    'form',
+                    { action: '/result', method: 'post', onSubmit: this.submit },
+                    React.createElement(
+                        'table',
+                        null,
+                        React.createElement(
+                            'tbody',
+                            null,
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1', name: 'p1', defaultValue: p1 })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Rank', name: 'p1Rank', defaultValue: p1Rank })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Rep', name: 'p1Rep', defaultValue: p1Rep })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Status', name: 'p1Status', defaultValue: p1Status })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Win', name: 'p1Win', defaultValue: p1Win })
+                                )
+                            ),
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2', name: 'p2', defaultValue: p2 })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Rank', name: 'p2Rank', defaultValue: p2Rank })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Rep', name: 'p2Rep', defaultValue: p2Rep })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Status', name: 'p2Status', defaultValue: p2Status })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Win', name: 'p2Win', defaultValue: p2Win })
+                                )
+                            ),
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'submit', value: 'Quit' })
+                                )
+                            )
+                        )
+                    )
+                ), document.getElementById('result'));
             } else {
                 ReactDOM.render(React.createElement('img', { src: 'img/defeat.png', className: 'victory' }), document.getElementById('gameover'));
+                socket.emit('defeat', { userName: real.value });
+                p1Status = p2Status = 1;
+                p1Win = 'defeat';p2Win = 'victory';
+                ReactDOM.render(React.createElement(
+                    'form',
+                    { action: '/result', method: 'post', onSubmit: this.submit },
+                    React.createElement(
+                        'table',
+                        null,
+                        React.createElement(
+                            'tbody',
+                            null,
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1', name: 'p1', defaultValue: p1 })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Rank', name: 'p1Rank', defaultValue: p1Rank })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Rep', name: 'p1Rep', defaultValue: p1Rep })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Status', name: 'p1Status', defaultValue: p1Status })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p1Win', name: 'p1Win', defaultValue: p1Win })
+                                )
+                            ),
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2', name: 'p2', defaultValue: p2 })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Rank', name: 'p2Rank', defaultValue: p2Rank })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Rep', name: 'p2Rep', defaultValue: p2Rep })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Status', name: 'p2Status', defaultValue: p2Status })
+                                ),
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'text', id: 'p2Win', name: 'p2Win', defaultValue: p2Win })
+                                )
+                            ),
+                            React.createElement(
+                                'tr',
+                                null,
+                                React.createElement(
+                                    'td',
+                                    null,
+                                    React.createElement('input', { type: 'submit', value: 'Quit' })
+                                )
+                            )
+                        )
+                    )
+                ), document.getElementById('result'));
             }
         }
     }
+
+    submit(e) {
+        console.log('Submit Result');
+        const path = '/result';
+        browserHistory.push(path);
+        e.preventDefault();
+    }
+
     render() {
 
         let board = [];
@@ -205,7 +456,11 @@ class Board extends React.Component {
             board,
             React.createElement(Turn, { turn: this.state.isBlacksTurn }),
             React.createElement(Reset, { onClick: () => this.reset() }),
-            React.createElement('div', { id: 'gameover' })
+            React.createElement(Pull, { onClick: () => this.pullback() }),
+            React.createElement(Give, { onClick: () => this.giveup() }),
+            React.createElement(Draw, { onClick: () => this.offerdraw() }),
+            React.createElement('div', { id: 'gameover' }),
+            React.createElement('div', { id: 'result' })
         );
     }
 }

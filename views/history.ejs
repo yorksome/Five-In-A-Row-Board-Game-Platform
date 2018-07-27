@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+        <div class='profile'>
+            <div class='details'>
+            <% if(user && user.username){ %>
+               <header>
+                  <h2>Match History</h2>
+              </header>
+              <table class="player">
+                <tr>
+                  <th>Player1</th>
+                  <th>Player2</th>
+                  <th>Date</th>
+                  <th>Gained Rank</th>
+                  <th>Gained reputation</th>
+                </tr>
+                 <% for(var i=0; i<data.length; i++) {%>
+                   <tr>
+                      <td><%= data[i].p1 %></td>
+                      <td><%= data[i].p2 %></td>
+                      <td><%= data[i].date %></td>
+                      <td><%= data[i].rankGained %></td>
+                      <td><%= data[i].creditGained %></td>
+                 <% } %>
+                <tr>
+                  <td><a href="/index">Back</a></td>
+                </tr>
+              </table>
+            <% }else{ %>
+                  <header>
+                     <h2>Five-in-line Master</h2>
+                     <h3>You have not logged in the system.</h3>
+                     <a href="/">LogIn</a>
+                     <a href="/register">Register</a>
+                 </header>
+           <% } %>
+            </div>
+        </div>
+  </body>
+</html>

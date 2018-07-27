@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Five-in-Line Master</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+        <div class='profile'>
+            <div class='details'>
+             <% if(user && user.username){ %>
+               <header>
+                  <h2><%=user.username%>'s Profile</h2>
+              </header>
+              <table>
+                <tr>
+                  <td><b>Username：</b></td>
+                  <td id="username"><%=user.username%></td>
+                </tr>
+                <tr>
+                  <td><b>Total Matches: </b></td>
+                  <td id="matches"><%=match_no%></td>
+                </tr>
+                <tr>
+                  <td><b>Rank Points: </b></td>
+                  <td id="rank"><%=rank%></td>
+                </tr>
+                <tr>
+                  <td><b>Reputation Credits: </b></td>
+                  <td id="reps"><%=credit%></td>
+                </tr>
+                <tr>
+                  <td><a href="/index">Back</a></td>
+                  <td></td>
+                </tr>
+              </table>
+              <% }else{ %>
+                    <header>
+                       <h2>Five-in-line Master</h2>
+                       <h3>You have not logged in the system.</h3>
+                       <a href="/">LogIn</a>
+                       <a href="/register">Register</a>
+                   </header>
+             <% } %>
+            </div>
+        </div>
+  </body>
+</html>

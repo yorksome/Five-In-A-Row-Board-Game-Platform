@@ -2,7 +2,6 @@ var express=require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-//var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
@@ -18,6 +17,11 @@ var resRouter = require('./routes/reset');
 var regProcessRouter = require('./routes/register_process');
 var resetProcessRouter = require('./routes/reset_process');
 var logoutRouter = require('./routes/logout');
+var profileRouter = require('./routes/profile');
+var historyRouter = require('./routes/history');
+var gameRouter = require('./routes/gaming');
+var resultRouter = require('./routes/result');
+var vic,los;
 
 app.set('views','views');
 app.set('view engine','ejs'); //utilize ejs template
@@ -38,13 +42,16 @@ app.use(session({
 
 app.use('/',loginRouter); //render login page
 app.use('/index',indexRouter); // render index page
-app.use('/register',regRouter);
-app.use('/reset',resRouter);
-app.use('/logout',logoutRouter);
-
+app.use('/register',regRouter); // render register page
+app.use('/reset',resRouter); // render reset page
+app.use('/logout',logoutRouter); // render logout page
+app.use('/profile',profileRouter);// render personal profile
+app.use('/history',historyRouter);// render history page
+app.use('/gaming',gameRouter);//render game page
 app.post('/loginProcess',loginProcessRouter); // login post process
 app.post('/registerProcess',regProcessRouter); // register post process
 app.post('/resetProcess',resetProcessRouter);
+app.post('/result',resultRouter);
 
 app.use(function(req, res, next) {
   res.locals.session = req.session; // global variable that might change
@@ -55,8 +62,6 @@ app.use(function(req, res, next) {
       res.redirect('/');
     }
   } else if (req.session.user) {
-    var id = req.session.user;
-    res.redirect('/loginProcess');
     next();
   }
 });
@@ -64,32 +69,43 @@ app.use(function(req, res, next) {
 var userNum=0;//用来记录在线用户人数
 var role=true;//用来分配下棋的身份
 var onlineUser={}; //用来存储在线人数及socket的id
+var gamingUser = {}; //在游戏中的一对
 io.on('connection', function(socket){
-  socket.on('gaming',function(obj){
+  socket.on('login',function(obj){
     onlineUser[socket.id]=obj;
     //谁来的跟谁分配权限  下黑旗，白旗还是观战
     userNum++;
     if(userNum==1){
         onlineUser[socket.id]=Object.assign(obj,{role:true});
+        gamingUser[socket.id]=Object.assign(obj,{win:null,status:0});
     }else if(userNum==2){
         onlineUser[socket.id]=Object.assign(obj,{role:false});
+        gamingUser[socket.id]=Object.assign(obj,{win:null,status:0});
     }else if(userNum>2){
         onlineUser[socket.id]=obj;
     }
 
     io.to(socket.id).emit('role', onlineUser[socket.id]);//将身份信息（下黑旗还是白旗）传过去
     io.emit('online', onlineUser);//将在线人员名单带过去
-    console.log(obj.userName,'is starting a match');
+    io.emit('gaming', gamingUser);//在玩人员名单带过去
     console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
+    console.log('Gaming User:',gamingUser);
   })
-  socket.on('disconnect', function(){
-    console.log(socket.id,'disconnected');
+  socket.on('disconnect', function(obj){
+    onlineUser[socket.id]=obj;
+    gamingUser[socket.id]=obj;
+    console.log(obj.userName,'disconnected');
     if(onlineUser.hasOwnProperty(socket.id)){//disconnect的时候，将它从onlineUser里删掉
       delete onlineUser[socket.id];
       userNum--;
     }
+    if(gamingUser.hasOwnProperty(socket.id)){//disconnect的时候，将它从onlineUser里删掉
+      delete gamingUser[socket.id];
+    }
     io.emit('online',onlineUser);//用来同步数据在线人数
-    console.log('Online Users: ',onlineUser,'Online Numbers: ',userNum);
+    io.emit('gaming',gamingUser);
+    console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
+    console.log('Gaming User:',gamingUser);
   });
   socket.on('chat message', function(msg){
     // 参数为下到什么坐标和目前是黑方or白方
