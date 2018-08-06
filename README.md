@@ -27,16 +27,20 @@ Project Log:
     2018-7-14: Working on the index page to display username retrieved from session
     2018-7-16: Utilize ejs template in 'views' folder to render pages. Successfully present username on the webpage which is sent from the backend.
     2018-7-17 ~ 2018-7-27: Successfully completed functionalities of user management area. Now players can check their profile and match history. Also, they are able to see their opponent's rank and reputation points once they started the game. Match Results would be saved to DB and players' rank and reputation would be upated as well after each match.
+    2018-7-28 ~ 2018-8-04：Finished player's functionalities in a match. For example, pullback, giveup and offer draw. Reputation System was completed in terms of reputation punishment on those players who want to leave the match after started.
 
-Difficulties:
+Difficulties - Solutions:
 
     1. Form - router post (Cannot Post) -- set app.post(path,routerObject) in app.js
     2. Mongoose - Create/Update -- set Schema -> Model (used to interact with DB)
     3. Authentication - User Login -- utilize session to save user login status in server side
     4. ejs engine - display username -- display session username on the frontend webpages by using ejs template, set view engine    in app.js first and render ejs when needed.
     5. React ComponentDidUpdate -- This component used to update UI would be triggered once the state is altered. Hence it is readily to produce a dead loop if programmers use 'this.setState' in this component area without strict conditions.
-    6. How to automatically submit the result to database instead of players' manaully clicking on the button?
-    7. How to distinguish the situation whether people close the tab before match starting or in match gaming?
+    6. How to automatically submit the result to database instead of players' manaully clicking on the button? (not done yet)
+    7. How to distinguish the situation whether people quit before match starting or in match gaming? - Create a new state called status to THE BOARD. The value of status includes -1(free),0(in gaming),1(match end).
+    8. How to pull back last operation which the player did? - Assign a state called last which is used to record the last point.
+    9. Settings of Offer Draw - ONLY IF two players both request offer draw, then the system would make the deal. - Created a state which is an array to store the number of people who request offer draw.
+    10. How to prevent people from closing the tab during the match? There is currently no solution to automatically submit the situation when people quit by closing the tab.
     
 Instructions:
 
