@@ -60,7 +60,7 @@ html,body{
       background: url('../img/white.png') no-repeat center center;
       background-size: 25px 25px;
   }
-  .reset{
+  .quit{
       position:fixed;
       left:33%;
       bottom:40px;
