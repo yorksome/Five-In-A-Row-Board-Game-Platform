@@ -14,8 +14,8 @@ Overall Improvements:
     1. Add components: user login, user registration, password recovery
     2. Check personal profile
     3. Check match history (Gained rank points, reputation credits)
-    4. Before game: set minimum reputation credits of matching people
-    5. In game: pull back, give up, offer draw, pause and save match
+    4. Before game: check current rank and reps (If reputation under 0, then cannot start game)
+    5. In game: pull back, give up, offer draw, quit
     6. After game: automatic rank calculation, automatic reputation credits calculation              
 
 Project Log:
@@ -28,6 +28,7 @@ Project Log:
     2018-7-16: Utilize ejs template in 'views' folder to render pages. Successfully present username on the webpage which is sent from the backend.
     2018-7-17 ~ 2018-7-27: Successfully completed functionalities of user management area. Now players can check their profile and match history. Also, they are able to see their opponent's rank and reputation points once they started the game. Match Results would be saved to DB and players' rank and reputation would be upated as well after each match.
     2018-7-28 ~ 2018-8-04：Finished player's functionalities in a match. For example, pullback, giveup and offer draw. Reputation System was completed in terms of reputation punishment on those players who want to leave the match after started.
+    2018-8-05 ~ 2018-8-12: IMPROVEMENTS on design latyout and reminders or warnings shown in game. In addition, testing and evaluation was implemented as well.
 
 Difficulties - Solutions:
 
