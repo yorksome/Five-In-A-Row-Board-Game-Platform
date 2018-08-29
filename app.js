@@ -29,6 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(cookieParser());
 app.use(express.static('public')); // provide static files such as images
+app.use('/lib',express.static('node_modules'));
 
 app.use(session({
   resave:true,
@@ -47,34 +48,32 @@ app.use('/reset',resRouter); // render reset page
 app.use('/logout',logoutRouter); // render logout page
 app.use('/profile',profileRouter);// render personal profile
 app.use('/history',historyRouter);// render history page
-app.use('/gaming',gameRouter);//render game page
+app.use('/gaming',gameRouter); //render game page
 app.post('/loginProcess',loginProcessRouter); // login post process
 app.post('/registerProcess',regProcessRouter); // register post process
-app.post('/resetProcess',resetProcessRouter);
+app.post('/resetProcess',resetProcessRouter); // reset post process
 app.post('/result',resultRouter);
 
 app.use(function(req, res, next) {
-  res.locals.session = req.session; // global variable that might change
-  if (!req.session.user) {
-    if (req.url == "/") {
-      next();
-    } else {
-      res.redirect('/');
-    }
-  } else if (req.session.user) {
+  var sess = req.session; // global variable that might change
+  var loginUser = sess.user;
+  if (!loginUser) {
+    res.redirect('/');
+  } else if (loginUser) {
+    res.redirect('/index');
     next();
   }
 });
 
-var userNum=0;//用来记录在线用户人数
-var role=true;//用来分配下棋的身份
-var onlineUser={}; //用来存储在线人数及socket的id
-var gamingUser = {}; //在游戏中的一对
+var userNum=0;//Online User Numbers
+var role=true;//Black or White
+var onlineUser={};
+var gamingUser = {};
 var offerDraw = {};
 io.on('connection', function(socket){
   socket.on('login',function(obj){
     onlineUser[socket.id]=obj;
-    //谁来的跟谁分配权限  下黑旗，白旗还是观战
+    //Assign White / Black STONE
     userNum++;
     if(userNum==1){
         onlineUser[socket.id]=Object.assign(obj,{role:true});
@@ -86,42 +85,62 @@ io.on('connection', function(socket){
         onlineUser[socket.id]=obj;
     }
 
-    io.to(socket.id).emit('role', onlineUser[socket.id]);//将身份信息（下黑旗还是白旗）传过去
-    io.emit('online', onlineUser);//将在线人员名单带过去
-    io.emit('gaming', gamingUser);//在玩人员名单带过去
+    io.to(socket.id).emit('role', onlineUser[socket.id]);//Role: Black / White
+    io.emit('online', onlineUser);
+    io.emit('gaming', gamingUser);
     console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
-    console.log('Gaming User:',gamingUser);
+    console.log('Gaming User: ',gamingUser);
   })
   socket.on('disconnect', function(obj){
     onlineUser[socket.id]=obj;
     gamingUser[socket.id]=obj;
     offerDraw[socket.id]=obj;
-    console.log(obj.userName,'disconnected');
-    if(onlineUser.hasOwnProperty(socket.id)){//disconnect的时候，将它从onlineUser里删掉
+    if(onlineUser[socket.id]){//disconnect invoked, delete user from onlineUser
       delete onlineUser[socket.id];
       userNum--;
     }
-    if(gamingUser.hasOwnProperty(socket.id)){//disconnect的时候，将它从onlineUser里删掉
+    if(gamingUser[socket.id]){
+      delete gamingUser[socket.id];
+    }
+    if(offerDraw[socket.id]){
+      delete offerDraw[socket.id];
+    }
+    io.emit('online',onlineUser);// Update Online Users
+    io.emit('gaming',gamingUser);// Update Gaming Users
+    io.emit('offerdraw',offerDraw);// Update Users who wants to offer draw
+    console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
+    console.log('Gaming User:',gamingUser);
+  });
+  socket.on('chat message', function(msg){
+    // parameter - stores location & Turn
+    console.log(msg.player?'Black':'White','placed at: ' + msg.place);
+    io.emit('chat message', msg);
+  });
+  socket.on('quit', function(obj){
+    //parameter - Black or White
+    console.log(obj.userName+' requests quit. Current Board Status: '+ obj.status);
+    io.emit('quit',obj);
+  });
+  socket.on('number',function(obj){
+    onlineUser[socket.id]=obj;
+    gamingUser[socket.id]=obj;
+    offerDraw[socket.id]=obj;
+
+    if(onlineUser.hasOwnProperty(socket.id)){//disconnect invoked, delete user from onlineUser
+      delete onlineUser[socket.id];
+      userNum--;
+    }
+    if(gamingUser.hasOwnProperty(socket.id)){
       delete gamingUser[socket.id];
     }
     if(offerDraw.hasOwnProperty(socket.id)){
       delete offerDraw[socket.id];
     }
-    io.emit('online',onlineUser);//用来同步数据在线人数
-    io.emit('gaming',gamingUser);
-    io.emit('offerdraw',offerDraw);
+    io.emit('online',onlineUser);// Update Online Users
+    io.emit('gaming',gamingUser);// Update Gaming Users
+    io.emit('offerdraw',offerDraw);// Update Users who wants to offer draw
     console.log('Online User: ',onlineUser,'Online Numbers: ',userNum);
     console.log('Gaming User:',gamingUser);
-  });
-  socket.on('chat message', function(msg){
-    // 参数为下到什么坐标和目前是黑方or白方
-    console.log(msg.player?'Black':'White','placed at: ' + msg.place);
-    io.emit('chat message', msg);
-  });
-  socket.on('quit', function(obj){
-    //参数为目前黑旗or白旗
-    console.log(obj.userName+' request quit. Current Board Status: '+ obj.status);
-    io.emit('quit',obj);
   });
   socket.on('giveup',function(obj){
     console.log(obj.userName + ' gave up the game.');
@@ -130,7 +149,8 @@ io.on('connection', function(socket){
   socket.on('offerdraw',function(obj){
     console.log(obj.userName + ' wants to offer draw.');
     offerDraw[socket.id]=obj;
-    io.emit('offer draw',offerDraw);
+    io.emit('offer draw',obj);
+    io.emit('draw',offerDraw);
   });
   socket.on('pullback',function(msg){
     console.log(msg.userName+' pulled back last operation.');

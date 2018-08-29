@@ -12,7 +12,7 @@ router.get('/', function (req, res) {
            res.send('<p>No user existed.</p>');
          }
          else {
-           res.render('gaming',{user:user,rank:result.rank,credit:result.credit});
+           res.render('gaming',{user:user,rank:result.rank,credit:result.credit,quit:result.quit_no});
          }
     })
   }

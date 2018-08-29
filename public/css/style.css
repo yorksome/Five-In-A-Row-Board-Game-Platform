@@ -16,7 +16,6 @@ html,body{
 
   table th{
     height: 40px;
-
   }
 
   table td{
@@ -43,6 +42,12 @@ html,body{
     padding:5px;
     background: url('../img/timg.jpg');
   }
+
+  #warning{
+	  position:fixed;
+    top:5%;
+	  left:35%;
+  }
   .player{
     position: absolute;
     left: 50px;
@@ -62,7 +67,7 @@ html,body{
   }
   .quit{
       position:fixed;
-      left:33%;
+      left:40px;
       bottom:40px;
       padding: 10px 15px;
       border: 1px solid;
@@ -72,7 +77,7 @@ html,body{
   }
   .pull{
       position:fixed;
-      left:43%;
+      left:120px;
       bottom:40px;
       padding: 10px 15px;
       border: 1px solid;
@@ -83,7 +88,7 @@ html,body{
 
   .give{
       position:fixed;
-      left:53%;
+      right:180px;
       bottom:40px;
       padding: 10px 15px;
       border: 1px solid;
@@ -93,7 +98,7 @@ html,body{
   }
   .draw{
       position:fixed;
-      left:63%;
+      right:40px;
       bottom:40px;
       padding: 10px 15px;
       border: 1px solid;
@@ -111,14 +116,14 @@ html,body{
     display: relative;
     width: 100%;
     height:calc(100%);
-    background: url('../img/');
+    background: url('../img/background.jpg');
     background-size: cover;
   }
   .login .loginName{
     position:absolute;
     width:500px;
     top:12%;
-    height:250px;
+    height:300px;
     left:50%;
     margin-left:-250px;
     background: rgba(255,255,255,0.4)
@@ -131,7 +136,7 @@ html,body{
     display: relative;
     width: 100%;
     height:calc(100%);
-    background: url('../img/');
+    background: url('../img/background.jpg');
     background-size: cover;
   }
   .profile .details{

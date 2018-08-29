@@ -3,20 +3,21 @@ var login=document.getElementsByClassName('login')[0];
 var real = document.getElementById('user');
 var rank = document.getElementById('rank');
 var credit = document.getElementById('credit');
+var quit = document.getElementById('quit');
 var socket;
-var pull_no = 0;
+var pull_no = 2;
 
 function renderBoard(props){
   if(credit.value>=0){
     login.style.display='none';
     wrap.style.display='block';
     socket=io();
-    socket.emit('login',{'userName':real.value,'rank':rank.value,'credit':credit.value});
+    socket.emit('login',{'userName':real.value,'rank':rank.value,'credit':credit.value,'quit':quit.value});
     ReactDOM.render(<Board />,
     document.getElementById('wrap'))
   }
   else{
-    alert('Low reputation credits. Game Blocked.');
+    alert('Game Blocked. Email to <yekang.gong@durham.ac.uk> for recovery.');
   }
 }
 
@@ -74,12 +75,12 @@ function OnlinePlayer(props){
                     if(value.hasOwnProperty('role') && value.role){
                          return <div key={index} className='clearfix'>
                                     <Unit style='unit unit-b' />
-                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}]</div>
+                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}, Quit: {value.quit}]</div>
                                 </div>
                     }else if(value.hasOwnProperty('role') && !value.role){
                          return  <div key={index} className='clearfix'>
                                     <Unit style='unit unit-w' />
-                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}]</div>
+                                    <div className='fl'>{value.userName}   [Rank: {value.rank}, Reputation: {value.credit}, Quit: {value.quit}]</div>
                                 </div>
                     }else{
                          return  <p key={index}>{value.userName} : is observing.</p>
@@ -90,7 +91,7 @@ function OnlinePlayer(props){
     )
 }
 
-//玩家切换
+//Players Turn
 function Turn(props){
     var result;
     if(props.turn){
@@ -103,7 +104,7 @@ function Turn(props){
     )
 }
 
-//主棋盘
+//Main Board
 class Board extends React.Component{
   constructor() {
     super();
@@ -144,8 +145,8 @@ class Board extends React.Component{
   componentDidMount() {
     var that = this;
     var last_point;
+
      socket.on('chat message', function(msg){
-      //更新视图
       const styleArray = that.state.styleArr.slice();
       styleArray[msg.place] = that.state.isBlacksTurn ? 'unit unit-b' : 'unit unit-w';
       if(that.state.point==-1){
@@ -167,7 +168,8 @@ class Board extends React.Component{
     });
     socket.on('quit',function(obj){
       if(obj.status==-1 || obj.status==1){
-        window.location='/logout';
+        alert('You are directing to index.');
+        window.location='/index';
         console.log(obj.userName +' quit the game.');
       }else{
        if(obj.userName==real.value){
@@ -194,33 +196,39 @@ class Board extends React.Component{
           giveup:obj.userName
         });
     });
-    socket.on('offer draw',function(user){
-      that.setState({
-        draw:user,
-        status:1
-      });
+    socket.on('offer draw',function(obj){
+	  let styles = {
+		color:'red'
+	  };
+    if(obj.userName!=real.value)
+    {
+     alert(obj.userName + ' wants to offer draw.')
+    }
+	  ReactDOM.render(<div style={styles}> * Reminder: {obj.userName} wants to offer draw. </div>,document.getElementById('warning'));
+    });
+    socket.on('draw',function(user){
+    that.setState({
+      draw:user
+    });
     });
     socket.on('pull back',function(msg){
       console.log(msg.userName + ' pull back');
       const styleArray = that.state.styleArr.slice();
-      if(that.state.point!=-1){
-      styleArray[msg.place]='unit';
-      that.setState({
-        'styleArr':styleArray,
-         isBlacksTurn: !msg.turn,
-         point:last_point
-      })}else {
-        alert('Cannot pull back');
-      }
+        if(msg.userName!=real.value)
+        {
+         alert(msg.userName + ' pulled back.');
+        }
+        styleArray[msg.place]='unit';
+        that.setState({
+          'styleArr':styleArray,
+           isBlacksTurn: !msg.turn,
+           point:last_point
+        })
     });
   }
 
   handle(n){
-
-      //刚落子的加个css3特效
-      //
-      //
-      //
+      // CSS stones
       let num=0;
       for(let i in this.state.online){
             num++;
@@ -229,9 +237,9 @@ class Board extends React.Component{
         alert('Waiting for a partner.')
         return
       }
-      //判断该谁落子
+
       if(this.state.isBlacksTurn==this.state.urBlack){
-          if(this.state.styleArr[n]!='unit'){//如果落子的地方有子
+          if(this.state.styleArr[n]!='unit'){
             alert('The place is occupied.');
             return;
         }
@@ -246,12 +254,18 @@ class Board extends React.Component{
   }
 
   pull(){
-    if(pull_no<2){
-    socket.emit('pullback',{"place":this.state.point,"turn":this.state.isBlacksTurn,'userName':real.value});
-    pull_no++;
+    if(pull_no>0 && this.state.status==0){
+      socket.emit('pullback',{"place":this.state.point,"turn":this.state.isBlacksTurn,'userName':real.value});
+      pull_no--;
+      alert(pull_no + ' time(s) left.')
     }
     else {
-      alert('Ran out of times.')
+      if(this.state.status!=0){
+       alert('Cannot pull back.');
+      }
+      if(pull_no<=0){
+       alert('Ran out of times.');
+      }
     }
   }
 
@@ -264,15 +278,19 @@ class Board extends React.Component{
   }
 
   componentDidUpdate(){
-  // 更新的时候触发
+  // UI Update
   var gamingUser = this.state.gaming;
   var drawUser = this.state.draw;
   var p1 = real.value;
   var p1Rank = rank.value;
   var p1Rep = credit.value;
-  var p1,p1Rank,p1Rep,p1Status,p1Win;
-  var p2,p2Rank,p2Rep,p2Status,p2Win;
+  var p1Quit = quit.value;
+  var p1Status,p1Win;
+  var p2,p2Rank,p2Rep,p2Quit,p2Status,p2Win;
   var num=0;
+  var styles = {
+		color:'red'
+	};
 
   for(let key in gamingUser){
      if(gamingUser[key].userName!=p1)
@@ -280,6 +298,7 @@ class Board extends React.Component{
        p2 = gamingUser[key].userName;
        p2Rank = gamingUser[key].rank;
        p2Rep = gamingUser[key].credit;
+       p2Quit = gamingUser[key].quit;
        p2Status = gamingUser[key].status;
        p2Win = gamingUser[key].win;
      }else {
@@ -292,7 +311,45 @@ class Board extends React.Component{
     num++;
   }
 
-  if(this.state.quit){
+	if(this.state.status ==0 && num>1){
+		alert('Offer Draw. No winner.');
+		p1Status = p2Status = 0;
+		p1Win = 'offer draw'; p2Win = 'offer draw';
+		let styles = {
+		color:'red'
+	    };
+		ReactDOM.render(<div style={styles}>* Two players offered draw together. No winner.</div>,document.getElementById('warning'));
+		ReactDOM.render(<img src='img/draw.png' className='victory'/>,document.getElementById('gameover'));
+		ReactDOM.render(
+		<form action='/result' method='post' onSubmit={this.submit}>
+		 <table>
+		  <tbody>
+		  <tr>
+		   <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
+		   <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
+		   <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+       <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
+		   <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
+		   <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
+		  </tr>
+		  <tr>
+		   <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
+		   <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
+		   <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+       <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
+		   <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
+		   <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
+		  </tr>
+		  <tr>
+		   <td><input type='submit' value='Submit Result' /></td>
+		  </tr>
+		  </tbody>
+		</table>
+		</form>,
+		document.getElementById('result'));
+	   }
+
+  if(p1==this.state.quit){
     p1Status = -1; p2Status = 0;
     p1Win = 'quit'; p2Win = 'forced left';
     ReactDOM.render(<img src='img/defeat.png' className='victory'/>,document.getElementById('gameover'));
@@ -304,6 +361,7 @@ class Board extends React.Component{
        <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
        <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
        <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+       <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
        <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
        <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
       </tr>
@@ -311,6 +369,7 @@ class Board extends React.Component{
        <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
        <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
        <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+       <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
        <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
        <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
       </tr>
@@ -321,39 +380,43 @@ class Board extends React.Component{
     </table>
     </form>,
     document.getElementById('result'));
+  }else{
+    if(p1!=this.state.quit && this.state.quit!=null)
+    {
+      p1Status = 0; p2Status = -1;
+      p1Win = 'forced left'; p2Win = 'quit';
+      ReactDOM.render(<img src='img/victory.png' className='victory'/>,document.getElementById('gameover'));
+      ReactDOM.render(
+      <form action='/result' method='post' onSubmit={this.submit}>
+       <table>
+        <tbody>
+        <tr>
+         <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
+         <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
+         <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+         <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
+         <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
+         <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
+        </tr>
+        <tr>
+         <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
+         <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
+         <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+         <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
+         <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
+         <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
+        </tr>
+        <tr>
+         <td><input type='submit' value='Submit Result' /></td>
+        </tr>
+        </tbody>
+      </table>
+      </form>,
+      document.getElementById('result'));
+    }
   }
 
-  if(this.state.status!=1 && num>1){
-    alert('Offer Draw. No winner.');
-    p1Status = p2Status = 0;
-    p1Win = 'offer draw'; p2Win = 'offer draw';
-    ReactDOM.render(<img src='img/defeat.png' className='victory'/>,document.getElementById('gameover'));
-    ReactDOM.render(
-    <form action='/result' method='post' onSubmit={this.submit}>
-     <table>
-      <tbody>
-      <tr>
-       <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
-       <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
-       <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
-       <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
-       <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
-      </tr>
-      <tr>
-       <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
-       <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
-       <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
-       <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
-       <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
-      </tr>
-      <tr>
-       <td><input type='submit' value='Submit Result' /></td>
-      </tr>
-      </tbody>
-    </table>
-    </form>,
-    document.getElementById('result'));
-  }
+
 
   if(this.state.status==-1 || this.state.status==0){
        if(calculateWinner(this.state.styleArr,this.state.point)){
@@ -370,6 +433,7 @@ class Board extends React.Component{
                   <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
                   <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
                   <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+                  <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
                   <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
                   <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
                  </tr>
@@ -377,6 +441,7 @@ class Board extends React.Component{
                   <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
                   <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
                   <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+                  <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
                   <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
                   <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
                  </tr>
@@ -400,6 +465,7 @@ class Board extends React.Component{
                  <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
                  <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
                  <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+                 <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
                  <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
                  <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
                 </tr>
@@ -407,6 +473,7 @@ class Board extends React.Component{
                  <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
                  <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
                  <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+                 <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
                  <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
                  <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
                 </tr>
@@ -433,6 +500,7 @@ class Board extends React.Component{
          <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
          <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
          <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+         <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
          <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
          <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
         </tr>
@@ -440,6 +508,7 @@ class Board extends React.Component{
          <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
          <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
          <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+         <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
          <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
          <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
         </tr>
@@ -451,7 +520,7 @@ class Board extends React.Component{
       </form>,
       document.getElementById('result'));
     }else {
-      if (this.state.status==1 && p1!=this.state.giveup) {
+      if (this.state.status==1 && p1!=this.state.giveup && this.state.giveup!=null) {
         ReactDOM.render(<img src='img/victory.png' className='victory'/>,document.getElementById('gameover'));
         alert(this.state.giveup + ' gave up the game.');
          p1Status = p2Status = 1;
@@ -464,6 +533,7 @@ class Board extends React.Component{
             <td><input type='text' id='p1' name='p1' defaultValue={p1} /></td>
             <td><input type='text' id='p1Rank' name='p1Rank' defaultValue={p1Rank} /></td>
             <td><input type='text' id='p1Rep' name='p1Rep' defaultValue={p1Rep} /></td>
+            <td><input type='text' id='p1Quit' name='p1Quit' defaultValue={p1Quit} /></td>
             <td><input type='text' id='p1Status' name='p1Status' defaultValue={p1Status} /></td>
             <td><input type='text' id='p1Win' name='p1Win' defaultValue={p1Win} /></td>
            </tr>
@@ -471,6 +541,7 @@ class Board extends React.Component{
             <td><input type='text' id='p2' name='p2' defaultValue={p2} /></td>
             <td><input type='text' id='p2Rank' name='p2Rank' defaultValue={p2Rank} /></td>
             <td><input type='text' id='p2Rep' name='p2Rep' defaultValue={p2Rep} /></td>
+            <td><input type='text' id='p2Quit' name='p2Quit' defaultValue={p2Quit} /></td>
             <td><input type='text' id='p2Status' name='p2Status' defaultValue={p2Status} /></td>
             <td><input type='text' id='p2Win' name='p2Win' defaultValue={p2Win} /></td>
            </tr>
@@ -482,6 +553,7 @@ class Board extends React.Component{
          </form>,
          document.getElementById('result'));
       }
+
     }
    }
   }
@@ -504,6 +576,7 @@ class Board extends React.Component{
       return(
         <div>
           <OnlinePlayer online={this.state.online} />
+		  <div id='warning'></div>
           {board}
           <Turn turn={this.state.isBlacksTurn}/>
           <Quit onClick={() => this.quit()} />
@@ -522,7 +595,7 @@ function calculateWinner(arr,num) {
     var line=1;
     var upSide,leftUp,rightUp;
     upSide=leftUp=rightUp=Math.min(Math.floor(num/15),5);
-    //横向判断先向左后向右
+    // Horizontally
     var leftSide=Math.min(num%15,5);
     var rightSide=Math.min(14-num%15,5);
     //console.log('rightSide',rightSide)
@@ -545,7 +618,7 @@ function calculateWinner(arr,num) {
     }else{
         line=1;
     }
-    //竖向判断 先上后下
+    //  Vertically
     for(let i=num-15;i>=num-upSide*15;i=i-15){
         if(arr[i]==target){
             line++;
@@ -566,9 +639,9 @@ function calculateWinner(arr,num) {
     }else{
         line=1;
     }
-    //   斜向判断  酱紫/斜   先上后下
+    //   Diagonally : /
 
-    rightUp=Math.min(rightUp,rightSide)//判断太靠右边了，就被右边界隔断
+    rightUp=Math.min(rightUp,rightSide)
     for(let i=num-14;i>=num-rightUp*14;i=i-14){
         if(arr[i]==target){
             line++;
@@ -578,7 +651,7 @@ function calculateWinner(arr,num) {
     }
     var leftDown,rightDown;
     rightDown=leftDown=14-Math.floor(num/15);
-    leftDown=Math.min(leftDown,leftSide);//判断太靠左边了，就被左边界隔断
+    leftDown=Math.min(leftDown,leftSide);
     for(let i=num+14;i<=num+leftDown*14;i=i+14){
         if(arr[i]==target){
             line++;
@@ -591,7 +664,7 @@ function calculateWinner(arr,num) {
     }else{
         line=1;
     }
-    //   斜向判断   酱紫\斜   先上后下
+    //   Diagonally :  \
     rightUp=Math.min(rightUp,leftSide)
     for(let i=num-16;i>=num-rightUp*16;i=i-16){
         if(arr[i]==target){

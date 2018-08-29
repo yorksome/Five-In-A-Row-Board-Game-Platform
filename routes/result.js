@@ -6,11 +6,15 @@ var UserModel = require('../database/userModel');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 var session = require('express-session');
 
+
+
 router.post('/result',urlencodedParser, function (req, res) {
 
+  var user = req.session.user;
   var p1 = req.body.p1;
   var p1Rank = parseFloat(req.body.p1Rank);
   var p1Rep = parseInt(req.body.p1Rep);
+  var n = parseInt(req.body.p1Quit); // p1 quit times
   var p1Status = parseInt(req.body.p1Status);
   var p1Win = req.body.p1Win;
   var p2 = req.body.p2;
@@ -32,7 +36,8 @@ router.post('/result',urlencodedParser, function (req, res) {
     p1Rep = p1Rep + g_rep;
   }else if (p1Status==-1 && p2Status!=-1) {
     status= -1;
-    g_rep=-1;
+    g_rep= -(Math.pow(2,n));
+    n = n+1;
     p1Rep = p1Rep + g_rep;
   }else if(p2Status==-1 && p1Status!=-1){
     status= -1;
@@ -49,37 +54,38 @@ router.post('/result',urlencodedParser, function (req, res) {
       console.log(p1Rate);
       console.log(p2Rate);
       g_rank = 30*(1-p1Rate);
-      p1Rank = p1Rank + g_rank;
-      p2Rank = p2Rank + 30*(0-p2Rate);
+      p1Rank = (p1Rank + g_rank).toFixed(2);
+      p2Rank = (p2Rank - g_rank).toFixed(2);
     }else{
       let p1Rate = (1/(1+Math.pow(10,((p1Rank-p2Rank)/400)))).toFixed(2);
       let p2Rate = (1/(1+Math.pow(10,((p2Rank-p1Rank)/400)))).toFixed(2);
       console.log('p1: ' + p1Rate);
       console.log('p2: ' + p2Rate);
       g_rank = 30*(1-p1Rate);
-      p1Rank = p1Rank + g_rank;
-      p2Rank = p2Rank + 30*(0-p2Rate);
+      p1Rank = (p1Rank + g_rank).toFixed(2);
+      p2Rank = (p2Rank - g_rank).toFixed(2);
     }
-  }else if (p1Win=='defeat' && p2Win=='victory') {
+  }
+  else if (p1Win=='defeat' && p2Win=='victory') {
     if(p1Rank>=p2Rank){
       let p1Rate = (1/(1+Math.pow(10,((p2Rank-p1Rank)/400)))).toFixed(2);
       let p2Rate = (1/(1+Math.pow(10,((p1Rank-p2Rank)/400)))).toFixed(2);
       console.log(p1Rate);
       console.log(p2Rate);
       g_rank = 30*(0-p1Rate);
-      p1Rank = p1Rank + g_rank;
-      p2Rank = p2Rank + 30*(1-p2Rate);
+      p1Rank = (p1Rank + g_rank).toFixed(2);
+      p2Rank = (p2Rank - g_rank).toFixed(2);
     }else{
       let p1Rate = (1/(1+Math.pow(10,((p1Rank-p2Rank)/400)))).toFixed(2);
       let p2Rate = (1/(1+Math.pow(10,((p2Rank-p1Rank)/400)))).toFixed(2);
       console.log(p1Rate);
       console.log(p2Rate);
       g_rank = 30*(0-p1Rate);
-      p1Rank = p1Rank + g_rank;
-      p2Rank = p2Rank + 30*(1-p2Rate);
+      p1Rank = (p1Rank + g_rank).toFixed(2);
+      p2Rank = (p2Rank - g_rank).toFixed(2);
     }
   }else {
-      gRank=0;
+      g_rank=0;
   }
 
   var newMatch = {
@@ -92,7 +98,7 @@ router.post('/result',urlencodedParser, function (req, res) {
   };
 
   var conditions = { username : p1};
-  var update = { $set : { rank:p1Rank, credit:p1Rep } , $inc : {match_no:1} };
+  var update = { $set : { rank:p1Rank, credit:p1Rep, quit_no:n } , $inc : {match_no:1} };
   var options = { upsert : false };
 
   UserModel.findOneAndUpdate(conditions,update,options,function(error,result){
@@ -114,7 +120,7 @@ router.post('/result',urlencodedParser, function (req, res) {
       res.json({message:error});
     }else{
       console.log('saving match successfully');
-      res.redirect('/logout');
+      res.render('index',{user:user,message:'* Rank and Reputation Updated! Please Check Profile and Match History.'});
       console.log('redirecting to homepage');
     }
   });

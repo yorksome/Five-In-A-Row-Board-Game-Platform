@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Five-in-Line Master</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/lib/bootstrap/dist/js/bootstrap.min.js">
   </head>
   <body>
         <div class='login'>
@@ -14,6 +14,9 @@
               </header>
              <form action="/loginProcess" method="post" id="loginForm" onsubmit="return validate();">
               <table>
+                <tr>
+                  <td style="color:red"><%=message%></td>
+                </tr>
                 <tr>
                   <td><b>Username：</b></td>
                   <td><input type="text" id="username" name="username" placeholder="username"></td>

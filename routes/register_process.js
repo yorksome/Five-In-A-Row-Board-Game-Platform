@@ -32,7 +32,7 @@ router.post('/registerProcess',urlencodedParser, function (req, res) {
             }else {
             req.session.user={username : input_username};
             console.log('New user: '+ req.session.user.username);
-            res.redirect('/index');
+            res.render('index',{user:req.session.user,message:'* You have logged in!'});
             console.log(req.session.user.username + ' logged in');
             }
         });

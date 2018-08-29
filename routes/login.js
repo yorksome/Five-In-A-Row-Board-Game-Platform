@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/', function (req, res) {
-  res.render('login');
+  msg='';
+  res.render('login',{message:msg});
 });
 
 module.exports = router; //exports router object

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Five-in-line Master</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="/lib/bootstrap/dist/js/bootstrap.min.js">
   </head>
   <body>
         <div id="wrap" style='display:none'></div>
@@ -15,6 +16,9 @@
                       <h3>User: <%= user.username %> &nbsp <a href="/logout">LogOut</a></h3>
                    </header>
                    <table>
+                     <tr>
+                       <td style="color:red"><%= message %></td>
+                     </tr>
                      <tr>
                        <td><input type="button" id="profile" value="Your Profile" onclick="window.location='/profile'"></td>
                      </tr>
