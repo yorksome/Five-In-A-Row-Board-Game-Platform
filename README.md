@@ -6,12 +6,16 @@ Express+Node.js+Socket.io+MongoDB+React.js
 ## Project Aim
     This project aims to create a website that provides people a platform to play board games online.
     However, this website has some requirements that it must be able to calculate players' rank ability and reputation credits.
-    Hence, registered players in this platform can have a general view of opponents' and their own rank abilities and start a match with people who own good reputation credits to improve players' gaming experience.
+    Hence, registered players in this platform can have a general view of opponents' and their own rank abilities.  
+    And start a match with people who own good reputation credits to improve players' gaming experience.
 
 ## Background
-    Personally, I start this project as my master degree final project and will write a report as my degree dissertation.
-    This web-based platform is created based on a preexisting website of which the source code address is attached below.
-    Acknowledgement:https://github.com/guguji5/five-in-line
+    Personally, I start this project as my master degree final project and will write a report as my 
+    degree dissertation.This web-based platform is created based on a preexisting website of which the 
+    source code address is attached below.
+    
+## Acknowledgement
+    https://github.com/guguji5/five-in-line
 
 ### Overall Improvements:
 
